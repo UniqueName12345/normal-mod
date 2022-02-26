@@ -1,16 +1,40 @@
-package net.fabricmc.example.mixin;
+package net.darktree.interference.mixin;
 
-import net.fabricmc.example.ExampleMod;
-import net.minecraft.client.gui.screen.TitleScreen;
+import net.darktree.interference.MessageInjector;
+import net.minecraft.client.resource.SplashTextResourceSupplier;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.util.profiler.Profiler;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(TitleScreen.class)
-public class ExampleMixin {
-	@Inject(at = @At("HEAD"), method = "init()V")
-	private void init(CallbackInfo info) {
-		ExampleMod.LOGGER.info("This line is printed by an example mod mixin!");
+import java.util.List;
+
+@Mixin(SplashTextResourceSupplier.class)
+abstract public class MessageProviderMixin {
+
+	// set the string variable "message" to "yo mama gey" //
+	String message = "yo mama gey";
+
+
+	// Nothing to see here //
+
+	@Final
+	@Shadow
+	private List<String> splashTexts;
+
+	@Unique
+	private void supply( String message ) {
+		splashTexts.add( message );
 	}
+
+	@Inject(at = @At("TAIL"), method = "apply(Ljava/util/List;Lnet/minecraft/resource/ResourceManager;Lnet/minecraft/util/profiler/Profiler;)V")
+	private void apply(List<String> list, ResourceManager resourceManager, Profiler profiler, CallbackInfo info) {
+		MessageInjector.consume(this::supply);
+	}
+
 }
